@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { fetchBlogsByCategory } from "../../src/modules/blog/services/blogService";
+import { fetchBlogsByCategory } from "@services/blogService";
 
 const SportsCategoryPage = () => {
   const router = useRouter();
@@ -41,13 +41,15 @@ const SportsCategoryPage = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">All {category} Articles</h1>
       {allBlogs.length === 0 ? (
-        <p>No articles found for {category}. Please check the backend data or category name.</p>
+        <p>No articles found for {category}.</p>
       ) : (
         <ul>
           {allBlogs.map((blog) => (
             <li key={blog._id} className="mb-2">
-              <Link href={`/blog/${blog._id}`} className="text-blue-600 hover:underline">
-                {blog.title}
+              <Link href={`/blog/${blog._id}`} passHref>
+                <span className="text-blue-600 hover:underline cursor-pointer">
+                  {blog.title}
+                </span>
               </Link>
             </li>
           ))}
