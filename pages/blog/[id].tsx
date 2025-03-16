@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+
 import { fetchBlogById } from "@/modules/blog/services/blogService";
 
 const BlogDetail = () => {

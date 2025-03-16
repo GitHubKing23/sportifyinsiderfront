@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// ✅ Ensure the correct API base URL is set
-axios.defaults.baseURL = "http://localhost:5000/api";
-axios.defaults.withCredentials = true;
-axios.defaults.timeout = 10000; // 10-second timeout
+// ✅ Use environment variable for API base URL, defaulting to localhost in development
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+axios.defaults.withCredentials = import.meta.env.VITE_WITH_CREDENTIALS === "true";
+axios.defaults.timeout = Number(import.meta.env.VITE_API_TIMEOUT) || 10000; // Default 10 seconds
 
-// ✅ Health Check API Call
+// ✅ Backend Health Check
 export const checkBackendHealth = async () => {
   try {
     console.log("🔍 Checking backend health...");
