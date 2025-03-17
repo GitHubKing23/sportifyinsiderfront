@@ -1,13 +1,19 @@
 import axios from "axios";
 
-// ✅ Load environment variables properly in Next.js
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
+// ✅ Correctly set API Base URL
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL !== "http://localhost:5000/api"
+    ? process.env.NEXT_PUBLIC_API_BASE_URL
+    : "https://api.sportifyinsider.com/api"; // ✅ Use production API
+
 const WITH_CREDENTIALS = process.env.NEXT_PUBLIC_WITH_CREDENTIALS === "true";
 const API_TIMEOUT = Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 10000;
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = WITH_CREDENTIALS;
 axios.defaults.timeout = API_TIMEOUT;
+
+console.log(`🔗 API Base URL: ${API_BASE_URL}`); // ✅ Debugging
 
 // ✅ Type Definition for API Responses
 interface Blog {
