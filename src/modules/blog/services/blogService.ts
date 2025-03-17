@@ -1,58 +1,71 @@
 import axios from "axios";
 
-// ✅ Use environment variable for API base URL, defaulting to localhost in development
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-axios.defaults.withCredentials = import.meta.env.VITE_WITH_CREDENTIALS === "true";
-axios.defaults.timeout = Number(import.meta.env.VITE_API_TIMEOUT) || 10000; // Default 10 seconds
+// ✅ Load environment variables properly in Next.js
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
+const WITH_CREDENTIALS = process.env.NEXT_PUBLIC_WITH_CREDENTIALS === "true";
+const API_TIMEOUT = Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 10000;
+
+axios.defaults.baseURL = API_BASE_URL;
+axios.defaults.withCredentials = WITH_CREDENTIALS;
+axios.defaults.timeout = API_TIMEOUT;
+
+// ✅ Type Definition for API Responses
+interface Blog {
+  _id: string;
+  title: string;
+  feature_image?: string;
+  video_url?: string;
+  sections?: { heading: string; content: string }[];
+}
 
 // ✅ Backend Health Check
-export const checkBackendHealth = async () => {
+export const checkBackendHealth = async (): Promise<{ status: string } | null> => {
   try {
     console.log("🔍 Checking backend health...");
-    const { data } = await axios.get("/health");
+    const { data } = await axios.get<{ status: string }>("/health");
     console.log("✅ Backend Health:", data);
     return data;
-  } catch (error: any) {
-    console.error("❌ Backend Health Check Error:", error.message);
+  } catch (error: unknown) {
+    console.error("❌ Backend Health Check Error:", (error as Error).message);
     return null;
   }
 };
 
 // ✅ Fetch All Blogs
-export const fetchAllBlogs = async () => {
+export const fetchAllBlogs = async (): Promise<Blog[]> => {
   try {
     console.log("🔍 Fetching all blogs...");
-    const { data } = await axios.get(`/blogs?nocache=${Date.now()}`);
+    const { data } = await axios.get<Blog[]>(`/blogs?nocache=${Date.now()}`);
     console.log("✅ Blogs fetched:", data);
     return data;
-  } catch (err: any) {
-    console.error("❌ Fetch All Blogs Error:", err.message);
-    throw err;
+  } catch (error: unknown) {
+    console.error("❌ Fetch All Blogs Error:", (error as Error).message);
+    throw error;
   }
 };
 
 // ✅ Fetch Blogs by Category
-export const fetchBlogsByCategory = async (category: string) => {
+export const fetchBlogsByCategory = async (category: string): Promise<Blog[]> => {
   try {
     console.log(`🔍 Fetching blogs for category: ${category}`);
-    const { data } = await axios.get(`/blogs/category/${category}?nocache=${Date.now()}`);
+    const { data } = await axios.get<Blog[]>(`/blogs/category/${category}?nocache=${Date.now()}`);
     console.log(`✅ Blogs fetched for category '${category}':`, data);
     return data;
-  } catch (err: any) {
-    console.error(`❌ Fetch Blogs by Category Error ('${category}')`, err.message);
-    throw err;
+  } catch (error: unknown) {
+    console.error(`❌ Fetch Blogs by Category Error ('${category}')`, (error as Error).message);
+    throw error;
   }
 };
 
 // ✅ Fetch Single Blog by ID
-export const fetchBlogById = async (id: string) => {
+export const fetchBlogById = async (id: string): Promise<Blog | null> => {
   try {
     console.log(`🔍 Fetching blog by ID: ${id}`);
-    const { data } = await axios.get(`/blogs/${id}?nocache=${Date.now()}`);
+    const { data } = await axios.get<Blog>(`/blogs/${id}?nocache=${Date.now()}`);
     console.log("✅ Blog fetched by ID:", data);
     return data;
-  } catch (err: any) {
-    console.error(`❌ Fetch Blog by ID Error ('${id}')`, err.message);
-    throw err;
+  } catch (error: unknown) {
+    console.error(`❌ Fetch Blog by ID Error ('${id}')`, (error as Error).message);
+    return null;
   }
 };

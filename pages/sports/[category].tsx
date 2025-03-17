@@ -3,11 +3,16 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { fetchBlogsByCategory } from "@services/blogService";
 
+interface Blog {
+  _id: string;
+  title: string;
+}
+
 const SportsCategoryPage = () => {
   const router = useRouter();
   const { category } = router.query;
 
-  const [blogs, setBlogs] = useState<any>({ featured: [], others: [] });
+  const [blogs, setBlogs] = useState<{ featured: Blog[]; others: Blog[] }>({ featured: [], others: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,12 +23,12 @@ const SportsCategoryPage = () => {
       setLoading(true);
       try {
         console.log(`[Frontend] Fetching blogs for category: ${category}`);
-        const data = await fetchBlogsByCategory(category as string);
+        const data = await fetchBlogsByCategory(category);
         console.log(`[Frontend] Blogs received for ${category}:`, data);
         setBlogs(data);
-      } catch (error: any) {
-        console.error("Error fetching blogs:", error.message);
-        setError(error.message);
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+        setError("Failed to fetch category blogs.");
       } finally {
         setLoading(false);
       }
