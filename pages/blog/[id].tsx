@@ -3,6 +3,13 @@ import { useRouter } from "next/router";
 import Image from "next/image"; // ✅ Placed before custom imports
 
 import { fetchBlogById } from "@services/blogService"; // ✅ Fixed import order
+import dynamic from "next/dynamic";
+
+// ✅ Facebook component dynamically imported (client-side only)
+const FacebookEngagement = dynamic(
+  () => import("@modules/blog/components/FacebookEngagement"),
+  { ssr: false }
+);
 
 interface Blog {
   _id: string;
@@ -59,8 +66,8 @@ const BlogDetail = () => {
           <Image
             src={blog.feature_image}
             alt={blog.title}
-            width={800} // ✅ Specify width
-            height={400} // ✅ Specify height
+            width={800}
+            height={400}
             className="rounded-md"
           />
         </div>
@@ -69,11 +76,11 @@ const BlogDetail = () => {
       {/* ✅ Display Video */}
       {blog.video_url && (
         <div className="mt-4">
-          <iframe 
-            width="100%" 
-            height="400" 
-            src={blog.video_url.replace("watch?v=", "embed/")} 
-            title="Blog Video" 
+          <iframe
+            width="100%"
+            height="400"
+            src={blog.video_url.replace("watch?v=", "embed/")}
+            title="Blog Video"
             allowFullScreen
           />
         </div>
@@ -81,12 +88,15 @@ const BlogDetail = () => {
 
       <article className="mt-4">
         {blog.sections?.map((section, index) => (
-          <div key={index}>
+          <div key={index} className="mb-6">
             <h2 className="text-2xl font-semibold">{section.heading}</h2>
             <p>{section.content}</p>
           </div>
         ))}
       </article>
+
+      {/* ✅ Facebook Share + Comment Section */}
+      <FacebookEngagement />
     </div>
   );
 };
