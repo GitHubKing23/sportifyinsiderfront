@@ -2,7 +2,7 @@ import { useState } from "react";
 // import { fetchTickets } from "../services/ticketService"; // ❌ Temporarily disabled API call
 
 export const useTickets = () => {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +21,6 @@ export const useTickets = () => {
   //   setLoading(false);
   // };
 
-  // ✅ Replace API call with "Coming Soon" message
   const fetchEvents = async () => {
     setLoading(true);
     setTimeout(() => {
