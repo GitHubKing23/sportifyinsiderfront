@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import Image from "next/image"; // ✅ Placed before custom imports
 import Link from "next/link";
-import { fetchAllBlogs } from "@services/blogService"; // ✅ Fixed Import
-import Image from "next/image";
-import Navbar from "@components/Navbar"; // ✅ Fixed Navbar Import
+
+import Navbar from "@components/Navbar"; // ✅ Fixed import order
+import { fetchAllBlogs } from "@services/blogService"; // ✅ Correct order
 
 interface Blog {
   _id: string;
@@ -52,8 +53,8 @@ const BlogList: React.FC = () => {
                   <Image
                     src={blog.feature_image}
                     alt={blog.title}
-                    layout="fill"
-                    objectFit="cover"
+                    width={300} // ✅ Specify width
+                    height={200} // ✅ Specify height
                     className="rounded-md"
                   />
                 </div>

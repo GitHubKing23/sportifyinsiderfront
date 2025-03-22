@@ -1,27 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { fetchBlogById } from "@services/blogService"; // ✅ Corrected Import
+import Image from "next/image"; // ✅ Placed before custom imports
 
-// ✅ Define TypeScript types for Blog and Section
-interface BlogSection {
-  heading: string;
-  content: string;
-  image?: string;
-}
+import { fetchBlogById } from "@services/blogService"; // ✅ Fixed import order
 
 interface Blog {
+  _id: string;
   title: string;
   feature_image?: string;
   video_url?: string;
-  sections: BlogSection[];
+  sections?: { heading: string; content: string }[];
 }
 
-const BlogDetail: React.FC = () => {
+const BlogDetail = () => {
   const router = useRouter();
   const { id } = router.query;
 
   const [blog, setBlog] = useState<Blog | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,8 +26,7 @@ const BlogDetail: React.FC = () => {
     const loadBlog = async () => {
       try {
         console.log(`🔄 Loading blog with ID: ${id}`);
-        const data: Blog | null = await fetchBlogById(id);
-
+        const data = await fetchBlogById(id);
         if (!data) {
           console.warn(`⚠️ No blog data found for ID: ${id}`);
           setError(`Blog with ID ${id} not found.`);
@@ -39,9 +34,9 @@ const BlogDetail: React.FC = () => {
           console.log(`✅ Blog loaded:`, data);
           setBlog(data);
         }
-      } catch (err: unknown) {
+      } catch (err) {
         console.error(`❌ Error loading blog:`, err);
-        setError("Failed to load blog. Please try again.");
+        setError("Failed to load blog.");
       } finally {
         setLoading(false);
       }
@@ -50,51 +45,45 @@ const BlogDetail: React.FC = () => {
     loadBlog();
   }, [id]);
 
-  if (loading) return <div className="text-center text-lg font-medium">Loading blog...</div>;
-  if (error) return <div className="text-center text-red-500 font-medium">Error: {error}</div>;
-  if (!blog) return <div className="text-center text-gray-600">No blog found.</div>;
+  if (loading) return <div>Loading blog...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!blog) return <div>No blog found.</div>;
 
   return (
     <div className="container mx-auto p-4">
-      {/* ✅ Blog Title */}
-      <h1 className="text-3xl font-bold text-gray-900">{blog.title}</h1>
+      <h1 className="text-3xl font-bold">{blog.title}</h1>
 
-      {/* ✅ Feature Image (if available) */}
+      {/* ✅ Optimized Image Handling */}
       {blog.feature_image && (
-        <img
-          src={blog.feature_image}
-          className="rounded-md mt-4 w-full max-h-[500px] object-cover"
-          alt={blog.title}
-        />
+        <div className="relative w-full h-[400px] mt-4">
+          <Image
+            src={blog.feature_image}
+            alt={blog.title}
+            width={800} // ✅ Specify width
+            height={400} // ✅ Specify height
+            className="rounded-md"
+          />
+        </div>
       )}
 
-      {/* ✅ Video Embed (if available) */}
+      {/* ✅ Display Video */}
       {blog.video_url && (
-        <div className="mt-4 aspect-w-16 aspect-h-9">
-          <iframe
-            className="w-full h-[400px] rounded-md"
-            src={blog.video_url.replace("watch?v=", "embed/")}
-            title="Blog Video"
+        <div className="mt-4">
+          <iframe 
+            width="100%" 
+            height="400" 
+            src={blog.video_url.replace("watch?v=", "embed/")} 
+            title="Blog Video" 
             allowFullScreen
           />
         </div>
       )}
 
-      {/* ✅ Blog Content */}
-      <article className="mt-4 space-y-6">
+      <article className="mt-4">
         {blog.sections?.map((section, index) => (
           <div key={index}>
-            <h2 className="text-2xl font-semibold text-gray-800">{section.heading}</h2>
-            <p className="text-gray-700 leading-relaxed">{section.content}</p>
-
-            {/* ✅ Section Image (if available) */}
-            {section.image && (
-              <img
-                src={section.image}
-                className="mt-4 w-full rounded-md shadow-md"
-                alt={section.heading}
-              />
-            )}
+            <h2 className="text-2xl font-semibold">{section.heading}</h2>
+            <p>{section.content}</p>
           </div>
         ))}
       </article>

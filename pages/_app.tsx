@@ -2,7 +2,9 @@ import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import { logPageView } from "../lib/tracking"; // ✅ Import our tracking system
+
+import GoogleAnalytics from "@modules/GoogleAnalytics"; // ✅ Moved to correct position
+import { logPageView } from "../lib/tracking"; // ✅ Tracking system
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -15,12 +17,16 @@ export default function App({ Component, pageProps }: AppProps) {
       logPageView(url, document.referrer); // ✅ Log page views
     };
 
-    // ✅ Listen for page changes
     router.events.on("routeChangeComplete", handleRouteChange);
     return () => {
       router.events.off("routeChangeComplete", handleRouteChange);
     };
   }, [router.events]);
 
-  return <Component {...pageProps} />;
+  return (
+    <>
+      <GoogleAnalytics />
+      <Component {...pageProps} />
+    </>
+  );
 }
