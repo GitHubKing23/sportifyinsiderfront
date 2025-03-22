@@ -2,7 +2,7 @@ import { useState } from "react";
 // import { fetchTickets } from "../services/ticketService"; // ❌ Temporarily disabled API call
 
 export const useTickets = () => {
-  const [events, setEvents] = useState<Record<string, any>[]>([]);
+  const [events, setEvents] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

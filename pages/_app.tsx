@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 
 import GoogleAnalytics from "@modules/GoogleAnalytics"; // ✅ Moved to correct position
+
 import { logPageView } from "../lib/tracking"; // ✅ Tracking system
 
 export default function App({ Component, pageProps }: AppProps) {

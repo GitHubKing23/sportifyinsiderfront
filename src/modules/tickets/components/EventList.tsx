@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 // import { getTickets } from "../services/ticketService";  // ❌ Temporarily disabled
 
 const EventList: React.FC = () => {
@@ -12,14 +12,12 @@ const EventList: React.FC = () => {
   //   }
   // }, [sport, city]);
 
-  // // ✅ Fetch Events from API
   // const fetchEvents = async (sport: string, city: string) => {
   //   setLoading(true);
   //   setError(null);
 
   //   try {
   //     const data = await getTickets(sport, city);
-
   //     if (Array.isArray(data.tickets)) {
   //       setEvents(data.tickets);
   //     } else {
