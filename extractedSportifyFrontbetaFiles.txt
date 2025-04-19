@@ -1,0 +1,151 @@
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\utils\api.ts ===
+
+import axios from "axios";
+
+// 🔐 Token injection helper
+const injectToken = (config: any) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("access_token"); // 🔄 Consistency with useEthereumLogin.ts
+
+    // 🐛 Debugging token injection
+    console.log("🔐 Checking for token:", token);
+
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log("✅ Injected Authorization Header:", config.headers.Authorization);
+    } else {
+      console.warn("⚠️ No token found, skipping Authorization header");
+    }
+  }
+
+  return config;
+};
+
+// 🔁 Generic axios instance creator with token support
+const createApi = (baseURL: string) => {
+  console.log("🛰️ Creating Axios instance with baseURL:", baseURL);
+
+  const instance = axios.create({
+    baseURL,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    timeout: 10000, // ⏱️ 10s timeout to avoid hanging
+  });
+
+  instance.interceptors.request.use(injectToken, (error) => {
+    console.error("❌ Axios interceptor error:", error);
+    return Promise.reject(error);
+  });
+
+  return instance;
+};
+
+// 🌐 Use ENV variable or fallback to VPS IP
+const resolvedBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://15.235.185.142:5003";
+const api = createApi(resolvedBaseURL);
+
+// 🧪 Final check on baseURL
+console.log("📡 Axios is using base URL:", api.defaults.baseURL);
+
+export default api;
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\pages\_app.tsx ===
+
+// pages/_app.tsx
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import GoogleAnalytics from "@modules/GoogleAnalytics";
+import { logPageView } from "../lib/tracking";
+import { AuthProvider } from "@/context/AuthContext";
+
+// Initialize QueryClient
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2, // Retry failed queries twice
+      staleTime: 5 * 60 * 1000, // Cache data for 5 minutes
+    },
+  },
+});
+
+export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    console.log("✅ Tracking Initialized");
+
+    const handleRouteChange = (url: string) => {
+      console.log("📡 Tracking page view for:", url);
+      logPageView(url, document.referrer);
+    };
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router.events]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <GoogleAnalytics />
+        <Component {...pageProps} />
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\package.json ===
+
+{
+  "name": "sportifyinsider-frontbeta",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.67.2",
+    "axios": "^1.8.2",
+    "ethers": "^6.13.5",
+    "framer-motion": "^12.4.10",
+    "fs-extra": "^11.3.0",
+    "next": "15.2.1",
+    "next-seo": "^6.6.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-ga4": "^2.1.0",
+    "react-hook-form": "^7.54.2",
+    "react-icons": "^5.5.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "eslint": "^9.23.0",
+    "eslint-config-next": "15.2.1",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.5.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+
+

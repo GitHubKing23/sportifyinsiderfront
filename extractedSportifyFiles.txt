@@ -1,0 +1,808 @@
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\pages\profile.tsx ===
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/utils/api";
+
+const Profile = () => {
+  const { user, refreshUserProfile, token } = useAuth();
+
+  const [formData, setFormData] = useState({
+    username: "",
+    bio: "",
+    avatarUrl: "",
+  });
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const isAuthenticated = !!token;
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.ethereumAddress) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get(`/api/users/${user.ethereumAddress}`);
+        setFormData({
+          username: res.data.username || "",
+          bio: res.data.bio || "",
+          avatarUrl: res.data.avatarUrl || "",
+        });
+      } catch (err) {
+        console.error("❌ Failed to fetch profile", err);
+        setMessage("❌ Error fetching profile");
+      }
+    };
+
+    fetchProfile();
+  }, [user, isAuthenticated]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      if (avatarFile && user?.ethereumAddress) {
+        const formDataObj = new FormData();
+        formDataObj.append("avatar", avatarFile);
+        formDataObj.append("ethereumAddress", user.ethereumAddress);
+
+        const avatarRes = await api.post("/api/users/avatar", formDataObj);
+        formData.avatarUrl = avatarRes.data.avatarUrl;
+      }
+
+      await api.put("/api/users/update", {
+        username: formData.username,
+        bio: formData.bio,
+        avatarUrl: formData.avatarUrl,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMessage("✅ Profile updated successfully!");
+      await refreshUserProfile();
+    } catch (err) {
+      console.error("❌ Error updating profile", err);
+      setMessage("❌ Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isAuthenticated) {
+    return <p className="text-center mt-8 text-red-500">Please log in with MetaMask to access your profile.</p>;
+  }
+
+  return (
+    <div className="max-w-xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
+
+      {formData.avatarUrl && (
+        <Image
+          src={formData.avatarUrl}
+          alt="avatar"
+          width={96}
+          height={96}
+          className="rounded-full mb-4"
+        />
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block font-medium">Username:</label>
+          <input
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Bio:</label>
+          <textarea
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            rows={4}
+            className="w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Upload Avatar:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="w-full"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          disabled={loading}
+        >
+          {loading ? "Saving..." : "Save Changes"}
+        </button>
+
+        {message && <p className="mt-2 text-sm">{message}</p>}
+      </form>
+    </div>
+  );
+};
+
+export default Profile;
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\lib\tracking.ts ===
+
+import axios from "axios";
+
+// ✅ Set API URL for tracking (Uses production URL if available)
+const TRACKING_API_URL = process.env.NEXT_PUBLIC_TRACKING_API || "http://15.235.185.142:5001/metrics";
+
+// ✅ Function to log page views
+export const logPageView = async (url: string, referrer?: string) => {
+  try {
+    console.log(`📡 Logging page view: ${url} (Referrer: ${referrer || "N/A"})`);
+
+    await axios.post(`${TRACKING_API_URL}/page-view`, {
+      sessionId: getSessionId(),
+      page: url,
+      referrer: referrer || document.referrer,
+    });
+
+    console.log("✅ Page view logged successfully");
+  } catch (error: any) {
+    console.error("❌ Failed to log page view:", error.message);
+  }
+};
+
+// ✅ Function to manage session ID
+const getSessionId = (): string => {
+  let sessionId = localStorage.getItem("sessionId");
+  if (!sessionId) {
+    sessionId = generateSessionId(); // Generate a unique session ID
+    localStorage.setItem("sessionId", sessionId);
+  }
+  return sessionId;
+};
+
+// ✅ Generate Session ID Function (More Readable)
+const generateSessionId = (): string => {
+  return `session-${Math.random().toString(36).substring(2, 15)}`;
+};
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\components\Auth\useEthereumLogin.ts ===
+
+// C:\Users\User\sportifyinsider-frontbeta\src\components\Auth\useEthereumLogin.ts
+import { useState } from 'react';
+import { ethers } from 'ethers';
+
+import { authApi as axios } from '@/utils/api'; // ✅ Using correct base URL
+
+export const useEthereumLogin = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loginWithEthereum = async () => {
+    console.log("🔐 Starting Ethereum login...");
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed.');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+
+      try {
+        await provider.send('eth_requestAccounts', []);
+      } catch (metaErr: any) {
+        if (metaErr.code === -32002) {
+          throw new Error("MetaMask is already processing a request.");
+        }
+        throw new Error("MetaMask request was rejected or closed.");
+      }
+
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+
+      if (!address) {
+        throw new Error("No Ethereum address found.");
+      }
+
+      console.log("✅ Wallet address:", address);
+      console.log("🌐 Axios base URL:", axios.defaults.baseURL);
+      console.log("🌐 Full nonce URL:", `${axios.defaults.baseURL}/api/auth/nonce`);
+
+      // ✅ Step 1: Get nonce from /api/auth/nonce
+      console.log("[useEthereumLogin] Requesting nonce...");
+      const nonceRes = await axios.post('/api/auth/nonce', { ethereumAddress: address });
+
+      if (!nonceRes.data.nonce) {
+        throw new Error("No nonce received from server");
+      }
+
+      const nonce = nonceRes.data.nonce;
+      console.log("[useEthereumLogin] Nonce received:", nonce);
+
+      const message = `Sign this message to authenticate. Nonce: ${nonce}`;
+      const signature = await signer.signMessage(message);
+      console.log("✍️ Signature complete:", signature);
+
+      // ✅ Step 2: Verify signature at /api/auth/verify
+      console.log("[useEthereumLogin] Sending signature for verification...");
+      const verifyRes = await axios.post('/api/auth/verify', {
+        ethereumAddress: address,
+        signature,
+      });
+
+      const { token } = verifyRes.data;
+      if (!token) {
+        throw new Error("Token missing in server response.");
+      }
+
+      localStorage.setItem('access_token', token);
+      localStorage.setItem('ethereum_address', address);
+
+      console.log("✅ Login complete, token:", token.slice(0, 10) + "...");
+      return { address, token };
+    } catch (err: any) {
+      console.error("[useEthereumLogin] Ethereum login failed:", {
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status,
+        fullUrl: err?.config?.baseURL + err?.config?.url,
+        method: err?.config?.method,
+      });
+      setError(err?.response?.data?.error || err?.message || 'Ethereum login failed.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { loginWithEthereum, loading, error };
+};
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\context\AuthContext.tsx ===
+
+// C:\Users\User\sportifyinsider-frontbeta\src\context\AuthContext.tsx
+
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useRouter } from "next/router";
+
+import { useEthereumLogin } from "@components/Auth/useEthereumLogin";
+
+interface UserProfile {
+  username?: string;
+  ethereumAddress?: string;
+  avatarUrl?: string;
+  bio?: string;
+}
+
+interface AuthContextType {
+  address: string | null;
+  token: string | null;
+  loginWithMetaMask: () => Promise<void>;
+  logout: () => void;
+  user: UserProfile | null;
+  accessToken: string | null;
+  loading: boolean;
+  error: string | null;
+  refreshUserProfile: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType>({
+  address: null,
+  token: null,
+  loginWithMetaMask: async () => {},
+  logout: () => {},
+  user: null,
+  accessToken: null,
+  loading: false,
+  error: null,
+  refreshUserProfile: async () => {},
+});
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [address, setAddress] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const { loginWithEthereum, error: loginError, loading } = useEthereumLogin();
+  const router = useRouter();
+
+  // Restore session on load
+  useEffect(() => {
+    const storedAddress = localStorage.getItem("ethereum_address");
+    const storedToken = localStorage.getItem("access_token");
+
+    if (storedAddress && storedToken) {
+      console.log(`[AuthContext] Restoring session: ${storedAddress}`);
+      setAddress(storedAddress);
+      setToken(storedToken);
+      setUser({ ethereumAddress: storedAddress });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (token && address) {
+      refreshUserProfile();
+    }
+  }, [token, address]);
+
+  const loginWithMetaMask = async () => {
+    console.log("[AuthContext] loginWithMetaMask triggered");
+    try {
+      setError(null);
+      const result = await loginWithEthereum();
+
+      if (result) {
+        const { address, token } = result;
+        console.log(`[AuthContext] Login success: ${address}, token: ${token.slice(0, 10)}...`);
+
+        setAddress(address);
+        setToken(token);
+        localStorage.setItem("access_token", token);
+        localStorage.setItem("ethereum_address", address);
+
+        const userApiBase = process.env.NEXT_PUBLIC_USER_API || "http://localhost:5002";
+        console.log("[AuthContext] Creating/updating user profile...");
+        const createRes = await fetch(`${userApiBase}/api/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ethereumAddress: address,
+            username: address,
+          }),
+        });
+
+        if (!createRes.ok) {
+          const data = await createRes.json();
+          console.error("❌ Failed to create/update user:", data);
+        } else {
+          console.log("✅ Created/verified user profile");
+        }
+
+        await refreshUserProfile();
+
+        // ✅ Redirect new users to complete their profile
+        setTimeout(() => {
+          if (
+            user?.username === address &&
+            !user?.bio &&
+            !user?.avatarUrl
+          ) {
+            console.log("🟡 Detected new user — redirecting to /profile...");
+            router.push("/profile");
+          }
+        }, 500); // slight delay to ensure `user` is updated
+      } else {
+        console.warn("[AuthContext] No result from loginWithEthereum");
+        setError("Login failed: No result returned");
+      }
+    } catch (err: any) {
+      console.error("[AuthContext] MetaMask login failed:", err.message);
+      setError(err.message || "Login failed");
+      throw err;
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (!token || !address) {
+      console.warn("[AuthContext] Missing token or address during profile refresh");
+      return;
+    }
+
+    const userApiBase = process.env.NEXT_PUBLIC_USER_API || "http://localhost:5002";
+    try {
+      const res = await fetch(`${userApiBase}/api/users/${address}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.warn("[AuthContext] ❌ Failed to fetch user profile:", err);
+        return;
+      }
+
+      const profile = await res.json();
+      setUser(profile);
+      console.log("[AuthContext] ✅ User profile loaded:", profile);
+    } catch (err) {
+      console.error("[AuthContext] ❌ Could not load user profile:", err);
+    }
+  };
+
+  const logout = () => {
+    console.log("[AuthContext] Logging out...");
+    setAddress(null);
+    setToken(null);
+    setUser(null);
+    setError(null);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("ethereum_address");
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        address,
+        token,
+        loginWithMetaMask,
+        logout,
+        user,
+        accessToken: token,
+        loading,
+        error: error || loginError,
+        refreshUserProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+export { AuthContext };
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\modules\comments\components\CommentForm.tsx ===
+
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { createComment } from "@modules/comments/services/commentService";
+import { useAuth } from "@/context/AuthContext";
+
+interface Props {
+  postId: string;
+  onCommentAdded: () => void;
+}
+
+const CommentForm = ({ postId, onCommentAdded }: Props) => {
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { token, user, loginWithMetaMask } = useAuth();
+  const queryClient = useQueryClient();
+  const MAX_LENGTH = 200;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!content.trim()) {
+      setError("Comment cannot be empty");
+      return;
+    }
+
+    if (!token) {
+      setError("Please log in with MetaMask to comment");
+      return;
+    }
+
+    const optimisticComment = {
+      _id: `temp-${Date.now()}`,
+      content,
+      userAddress: user?.ethereumAddress,
+      createdAt: new Date().toISOString(),
+    };
+
+    console.log(`[CommentForm] Submitting comment for postId: ${postId}`);
+
+    setLoading(true);
+    try {
+      // ✅ Optimistic UI: show comment immediately
+      queryClient.setQueryData(["comments", postId], (old: any = []) => [
+        optimisticComment,
+        ...old,
+      ]);
+
+      await createComment(token, { postId, content });
+
+      // ✅ Ensure server state is synced
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+
+      setContent("");
+      onCommentAdded();
+      console.log("[CommentForm] Comment created successfully");
+    } catch (err: any) {
+      console.error("[CommentForm] Error submitting comment:", err);
+      setError(err?.message || "Failed to post comment");
+
+      // 🔄 Rollback optimistic comment
+      queryClient.setQueryData(["comments", postId], (old: any = []) =>
+        old.filter((c: any) => c._id !== optimisticComment._id)
+      );
+
+      if (err.message.includes("Unauthorized")) {
+        try {
+          await loginWithMetaMask();
+        } catch (loginErr) {
+          console.error("[CommentForm] Login refresh failed:", loginErr);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    if (newContent.length <= MAX_LENGTH) {
+      setContent(newContent);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      {error && <div className="text-red-500 text-sm">{error}</div>}
+      <textarea
+        className="w-full border p-2 rounded"
+        placeholder="Write your comment..."
+        value={content}
+        onChange={handleContentChange}
+        disabled={loading}
+        maxLength={MAX_LENGTH}
+      />
+      <div className="text-sm text-gray-500">
+        {content.length}/{MAX_LENGTH} characters
+      </div>
+      <button
+        type="submit"
+        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        disabled={loading || !content.trim()}
+      >
+        {loading ? "Posting..." : "Submit Comment"}
+      </button>
+    </form>
+  );
+};
+
+export default CommentForm;
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\modules\comments\components\CommentList.tsx ===
+
+// C:\Users\User\sportifyinsider-frontbeta\src\modules\comments\components\CommentList.tsx
+
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+import { fetchComments } from "@modules/comments/services/commentService";
+import { fetchUserProfile } from "@/services/userService";
+
+interface Comment {
+  _id: string;
+  content: string;
+  createdAt?: string;
+  userAddress?: string;
+}
+
+interface CommentListProps {
+  postId: string;
+  refreshTrigger?: boolean;
+}
+
+interface ProfileCache {
+  [address: string]: {
+    username: string;
+    avatarUrl?: string;
+  };
+}
+
+const CommentList = ({ postId, refreshTrigger }: CommentListProps) => {
+  const {
+    data: comments = [],
+    isLoading,
+    error,
+  }: UseQueryResult<Comment[], Error> = useQuery({
+    queryKey: ["comments", postId, refreshTrigger],
+    queryFn: () => fetchComments(postId),
+    retry: 2,
+  });
+
+  const [profileCache, setProfileCache] = useState<ProfileCache>({});
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const uniqueAddresses = Array.from(
+        new Set(comments.map((c) => c.userAddress).filter(Boolean))
+      );
+
+      const fetches = uniqueAddresses
+        .filter((addr): addr is string => typeof addr === "string" && !profileCache[addr])
+        .map(async (addr) => {
+          try {
+            const profile = await fetchUserProfile(addr);
+            return { addr, profile };
+          } catch (err) {
+            console.warn(`[CommentList] Could not fetch profile for ${addr}`);
+            return null;
+          }
+        });
+
+      const results = await Promise.all(fetches);
+
+      const newProfiles: ProfileCache = {};
+      results.forEach((res) => {
+        if (res) {
+          newProfiles[res.addr] = {
+            username: res.profile.username,
+            avatarUrl: res.profile.avatarUrl,
+          };
+        }
+      });
+
+      if (Object.keys(newProfiles).length > 0) {
+        setProfileCache((prev) => ({ ...prev, ...newProfiles }));
+      }
+    };
+
+    if (comments.length > 0) fetchProfiles();
+  }, [comments]);
+
+  console.log(`[CommentList] Rendering postId: ${postId}, Comments:`, comments);
+
+  if (isLoading) return <div>Loading comments...</div>;
+  if (error) {
+    console.error(`[CommentList] Query error for postId: ${postId}`, error);
+    return <div className="text-red-500">Error loading comments.</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {comments.length > 0 ? (
+        comments.map((comment) => {
+          const profile = comment.userAddress
+            ? profileCache[comment.userAddress]
+            : null;
+
+          return (
+            <div
+              key={comment._id}
+              data-testid={`comment-${comment._id}`}
+              className={`border p-3 rounded transition-all ${
+                comment._id.startsWith("temp-")
+                  ? "opacity-60 italic text-gray-500 animate-pulse"
+                  : "bg-white"
+              }`}
+            >
+              <div className="flex items-center space-x-2 mb-1">
+                <img
+                  src={profile?.avatarUrl || "/default-avatar.png"}
+                  alt="avatar"
+                  className="w-6 h-6 rounded-full"
+                />
+                <span className="text-sm font-semibold">
+                  {profile?.username ||
+                    (comment.userAddress
+                      ? comment.userAddress.slice(0, 6) +
+                        "..." +
+                        comment.userAddress.slice(-4)
+                      : "Anonymous")}
+                </span>
+              </div>
+
+              <div>{comment.content}</div>
+
+              {comment.createdAt && (
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(comment.createdAt).toLocaleString()}
+                </div>
+              )}
+            </div>
+          );
+        })
+      ) : (
+        <div className="text-sm text-gray-500">No comments yet for this post.</div>
+      )}
+    </div>
+  );
+};
+
+export default CommentList;
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\modules\user\components\UserProfile.tsx ===
+
+import { useContext, useEffect, useState } from "react";
+
+import { AuthContext } from "@/context/AuthContext";
+import { getUserProfile, updateUserProfile } from "@/services/userService";
+
+const UserProfile = () => {
+  const { user, token } = useContext(AuthContext);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (user?.ethereumAddress && token) {
+      getUserProfile(user.ethereumAddress, token).then(setProfile);
+    }
+  }, [user, token]);
+
+  if (!profile) return <div>Loading profile...</div>;
+
+  return (
+    <div className="p-4 bg-white rounded shadow">
+      <h2 className="text-xl font-bold">👤 User Profile</h2>
+      <p><strong>Username:</strong> {profile.username}</p>
+      <p><strong>Ethereum Address:</strong> {profile.ethereumAddress}</p>
+      {/* Add an edit form if needed */}
+    </div>
+  );
+};
+
+export default UserProfile;
+
+
+=== FILE: C:\Users\User\sportifyinsider-frontbeta\src\services\userService.ts ===
+
+import axios from "axios";
+
+const BASE_URL = process.env.NEXT_PUBLIC_USER_API || "http://localhost:5002/api/users";
+
+// 🔓 Public fetch (for comment display)
+export const fetchUserProfile = async (address: string) => {
+  const res = await axios.get(`${BASE_URL}/${address}`);
+  return res.data;
+};
+
+// 🔒 Authenticated profile fetch (for /profile page)
+export const getUserProfile = async (address: string, token: string) => {
+  const res = await axios.get(`${BASE_URL}/${address}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
+
+// 🔒 Authenticated update
+export const updateUserProfile = async (
+  address: string,
+  updates: Record<string, unknown>,
+  token: string
+) => {
+  try {
+    const res = await axios.put(`${BASE_URL}/update`, updates, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("❌ API Error:", error.message);
+    } else {
+      console.error("❌ Unknown error during profile update:", error);
+    }
+    throw error;
+  }
+};
+
+

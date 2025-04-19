@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Image from "next/image"; // ✅ Placed before custom imports
+import Image from "next/image";
 import Link from "next/link";
 
-import Navbar from "@components/Navbar"; // ✅ Fixed import order
-import { fetchAllBlogs } from "@services/blogService"; // ✅ Correct order
+// ✅ Updated import based on actual path
+import Navbar from "@modules/navbar/components/Navbar";
+import { fetchAllBlogs } from "@services/blogService";
 
 interface Blog {
   _id: string;
@@ -37,7 +38,7 @@ const BlogList: React.FC = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Navbar /> {/* ✅ Navbar is now correctly imported */}
+      <Navbar />
 
       <div className="container mx-auto p-6 pt-20">
         <h1 className="text-4xl font-bold mb-6 text-center">Latest Blog Posts</h1>
@@ -47,20 +48,26 @@ const BlogList: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogs.map((blog) => (
-            <div key={blog._id} className="p-4 border rounded-lg bg-white shadow-md hover:shadow-lg transition">
+            <div
+              key={blog._id}
+              className="p-4 border rounded-lg bg-white shadow-md hover:shadow-lg transition"
+            >
               {blog.feature_image && (
                 <div className="relative w-full h-[250px]">
                   <Image
                     src={blog.feature_image}
                     alt={blog.title}
-                    width={300} // ✅ Specify width
-                    height={200} // ✅ Specify height
+                    width={300}
+                    height={200}
                     className="rounded-md"
                   />
                 </div>
               )}
               <h2 className="text-xl font-semibold">{blog.title}</h2>
-              <Link href={`/blog/${blog._id}`} className="text-blue-600 hover:underline cursor-pointer mt-2 block">
+              <Link
+                href={`/blog/${blog._id}`}
+                className="text-blue-600 hover:underline cursor-pointer mt-2 block"
+              >
                 Read More →
               </Link>
             </div>

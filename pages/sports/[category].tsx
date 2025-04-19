@@ -13,7 +13,7 @@ const SportsCategoryPage = () => {
   const router = useRouter();
   const { category } = router.query;
 
-  const [blogs, setBlogs] = useState<{ featured: Blog[]; others: Blog[] }>({ featured: [], others: [] });
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,18 +41,16 @@ const SportsCategoryPage = () => {
   if (loading) return <div>Loading blogs...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  const allBlogs = [...blogs.featured, ...blogs.others];
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">All {category} Articles</h1>
-      {allBlogs.length === 0 ? (
+      {blogs.length === 0 ? (
         <p>No articles found for {category}.</p>
       ) : (
         <ul>
-          {allBlogs.map((blog) => (
+          {blogs.map((blog) => (
             <li key={blog._id} className="mb-2">
-              <Link href={`/blog/${blog._id}`} passHref>
+              <Link href={`/blog/${blog._id}`}>
                 <span className="text-blue-600 hover:underline cursor-pointer">
                   {blog.title}
                 </span>

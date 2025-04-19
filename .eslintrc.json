@@ -1,10 +1,36 @@
 {
-    "extends": ["next/core-web-vitals"],
-    "rules": {
-      "import/no-unresolved": "off",
-      "react-hooks/exhaustive-deps": "warn",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "warn"
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript",
+    "prettier"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "react-hooks",
+    "prettier"
+  ],
+  "rules": {
+    "import/no-unresolved": "error",
+    "import/export": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": "warn",
+    "prettier/prettier": "warn"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {},
+      "alias": {
+        "map": [
+          ["@", "./src"]
+        ],
+        "extensions": [".ts", ".tsx", ".js", ".jsx"]
+      }
     }
   }
-  
+}

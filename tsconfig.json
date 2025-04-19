@@ -13,14 +13,20 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "./",
+    "baseUrl": "src",
     "paths": {
-      "@services/*": ["src/modules/blog/services/*"],
-      "@components/*": ["src/modules/navbar/components/*"],
-      "@modules/*": ["src/modules/*"],
-      "@/*": ["src/*"]
-    }
+      "@services/*": ["modules/blog/services/*"],
+      "@components/*": ["components/*"],
+      "@modules/*": ["modules/*"],
+      "@/*": ["*"]
+    },
+    "typeRoots": ["./types", "./node_modules/@types"] // ✅ absolute paths, just in case
   },
-  "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "types/**/*.d.ts" // ✅ ensures custom declarations are picked up
+  ],
   "exclude": ["node_modules", ".next", "out"]
 }
