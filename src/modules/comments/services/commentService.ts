@@ -1,7 +1,14 @@
 import axios from "axios";
 
-// ✅ Ensure API_URL is always a string
-const API_URL: string = process.env.NEXT_PUBLIC_COMMENT_API || "http://localhost:5004/api/comments";
+// ✅ Dynamically determine API base URL
+const getApiUrl = (): string => {
+  if (process.env.NODE_ENV === "development") {
+    return "/proxy/comments";  // Use proxy in dev
+  }
+  return process.env.NEXT_PUBLIC_COMMENT_API || "https://api.sportifyinsider.com/comments";
+};
+
+const API_URL: string = getApiUrl();
 
 // ✅ Fetch comments for a blog post
 export const fetchComments = async (postId: string, page = 1) => {
