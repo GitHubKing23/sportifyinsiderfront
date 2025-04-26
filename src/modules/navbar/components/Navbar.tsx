@@ -1,9 +1,12 @@
-// C:\Users\User\sportifyinsider-frontbeta\src\modules\navbar\components\Navbar.tsx
 import { useState, useRef, useEffect, useContext } from "react";
 import Link from "next/link";
 import { FiMenu, FiX } from "react-icons/fi";
+import { AuthContext } from "@context/AuthContext";
 
-import { AuthContext } from "@/context/AuthContext";
+const categories = [
+  "NBA", "NHL", "NFL", "MLB", "Esports",
+  "FIFA", "Wrestling", "WNBA", "PGA", "Other"
+];
 
 export default function Navbar() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,12 +28,10 @@ export default function Navbar() {
   }, []);
 
   const handleLogin = async () => {
-    console.log("[Navbar] Triggering MetaMask login...");
     try {
       await loginWithMetaMask();
-      console.log("[Navbar] Login successful");
     } catch (err) {
-      console.error("[Navbar] Login failed:", err);
+      console.error("❌ Login failed:", err);
     }
   };
 
@@ -51,12 +52,15 @@ export default function Navbar() {
             </button>
             {isDropdownOpen && (
               <div className="absolute top-full left-0 bg-gray-800 shadow-lg rounded-lg mt-1 w-48 z-50">
-                <Link href="/sports/nba" className="block px-4 py-2 hover:bg-gray-700">NBA</Link>
-                <Link href="/sports/nfl" className="block px-4 py-2 hover:bg-gray-700">NFL</Link>
-                <Link href="/sports/mlb" className="block px-4 py-2 hover:bg-gray-700">MLB</Link>
-                <Link href="/sports/pga" className="block px-4 py-2 hover:bg-gray-700">PGA</Link>
-                <Link href="/sports/uefa" className="block px-4 py-2 hover:bg-gray-700">UEFA</Link>
-                <Link href="/sports/esports" className="block px-4 py-2 hover:bg-gray-700">Esports</Link>
+                {categories.map((cat) => (
+                  <Link
+                    key={cat}
+                    href={`/sports/${cat.toLowerCase()}`}
+                    className="block px-4 py-2 hover:bg-gray-700"
+                  >
+                    {cat}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
@@ -98,12 +102,15 @@ export default function Navbar() {
             </button>
             {isDropdownOpen && (
               <div className="bg-gray-800 shadow-lg rounded-lg mt-1">
-                <Link href="/sports/nba" className="block px-4 py-2 hover:bg-gray-700">NBA</Link>
-                <Link href="/sports/nfl" className="block px-4 py-2 hover:bg-gray-700">NFL</Link>
-                <Link href="/sports/mlb" className="block px-4 py-2 hover:bg-gray-700">MLB</Link>
-                <Link href="/sports/pga" className="block px-4 py-2 hover:bg-gray-700">PGA</Link>
-                <Link href="/sports/uefa" className="block px-4 py-2 hover:bg-gray-700">UEFA</Link>
-                <Link href="/sports/esports" className="block px-4 py-2 hover:bg-gray-700">Esports</Link>
+                {categories.map((cat) => (
+                  <Link
+                    key={cat}
+                    href={`/sports/${cat.toLowerCase()}`}
+                    className="block px-4 py-2 hover:bg-gray-700"
+                  >
+                    {cat}
+                  </Link>
+                ))}
               </div>
             )}
           </div>

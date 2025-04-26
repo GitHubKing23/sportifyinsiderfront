@@ -13,12 +13,17 @@ export default function Dropdown() {
       }
     }
 
-    // Attach event listener
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // ✅ Backend-aligned categories
+  const categories = [
+    "NBA", "NHL", "NFL", "MLB", "Esports",
+    "FIFA", "Wrestling", "WNBA", "PGA", "Other"
+  ];
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -35,14 +40,14 @@ export default function Dropdown() {
           className="absolute left-0 mt-2 w-48 bg-gray-800 shadow-lg rounded-md z-50"
           role="menu"
         >
-          {["NBA", "NFL", "MLB", "PGA", "UEFA", "Esports"].map((sport) => (
+          {categories.map((category) => (
             <Link
-              key={sport}
-              href={`/sports/${sport.toLowerCase()}`}
+              key={category}
+              href={`/sports/${category.toLowerCase()}`}
               className="block px-4 py-2 text-white hover:bg-gray-700"
               role="menuitem"
             >
-              {sport}
+              {category}
             </Link>
           ))}
         </div>

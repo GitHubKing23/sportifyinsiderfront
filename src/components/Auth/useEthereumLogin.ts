@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { authApi as axios } from '@/utils/api';
+import { authApi as axios } from '@utils/api';
 
 interface MetaMaskError {
   code?: number;
@@ -60,7 +60,6 @@ export const useEthereumLogin = () => {
 
       console.log("✅ Wallet address:", address);
 
-      // 🔄 Fixed endpoint: remove `/api/auth/` since it's already in baseURL
       const nonceRes = await axios.post('/nonce', { ethereumAddress: address });
 
       if (!nonceRes.data?.nonce) {
@@ -71,9 +70,11 @@ export const useEthereumLogin = () => {
       const message = `Sign this message to authenticate. Nonce: ${nonce}`;
       const signature = await signer.signMessage(message);
 
+      // ✅ Updated: Send exact signed message to backend
       const verifyRes = await axios.post('/verify', {
         ethereumAddress: address,
         signature,
+        message,   // Important addition
       });
 
       const { token } = verifyRes.data;

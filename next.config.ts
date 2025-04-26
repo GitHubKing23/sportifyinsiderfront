@@ -1,43 +1,47 @@
 import path from "path";
-import { NextConfig } from "next";
 import withPWA from "next-pwa";
+import type { NextConfig } from "next";
+import type { Configuration } from "webpack";
 
-// ✅ Wrap PWA with ESM style
 const withPWAConfig = withPWA({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
 });
 
-/** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
-  webpack: (config) => {
+  webpack: (config: Configuration) => {
+    config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
       "@services": path.resolve(__dirname, "src/modules/blog/services"),
-      "@components": path.resolve(__dirname, "src/modules/navbar/components"),
+      "@components": path.resolve(__dirname, "src/components"),
       "@modules": path.resolve(__dirname, "src/modules"),
-      "@": path.resolve(__dirname, "src"),
+      "@context": path.resolve(__dirname, "src/context"),
+      "@utils": path.resolve(__dirname, "src/utils"),
+      "@lib": path.resolve(__dirname, "src/lib"),
     };
     return config;
   },
 
   async rewrites() {
     return [
+      // ✅ Proxy for User API
       {
-        source: "/api/comments/:path*",
-        destination: `${process.env.NEXT_PUBLIC_COMMENT_API}/api/comments/:path*`,
+        source: "/proxy/users/:path*",
+        destination: `${process.env.NEXT_PUBLIC_USER_API}/:path*`,
       },
+      // ✅ Proxy for Comment API
       {
-        source: "/comments/:path*",
-        destination: `${process.env.NEXT_PUBLIC_COMMENT_API}/api/comments/:path*`,
+        source: "/proxy/comments/:path*",
+        destination: `${process.env.NEXT_PUBLIC_COMMENT_API}/:path*`,
       },
+      // ✅ General API Proxy
       {
-        source: "/api/:path*",
+        source: "/proxy/api/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
       },
     ];
   },
 };
 
-// ✅ Export the final config
 export default withPWAConfig(nextConfig);

@@ -15,18 +15,21 @@
     "incremental": true,
     "baseUrl": "src",
     "paths": {
+      "@/*": ["*"],                                    // ✅ Added root alias
       "@services/*": ["modules/blog/services/*"],
       "@components/*": ["components/*"],
       "@modules/*": ["modules/*"],
-      "@/*": ["*"]
+      "@context/*": ["context/*"],
+      "@utils/*": ["utils/*"],
+      "@lib/*": ["lib/*"]
     },
-    "typeRoots": ["./types", "./node_modules/@types"] // ✅ absolute paths, just in case
+    "typeRoots": ["types", "node_modules/@types"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "types/**/*.d.ts" // ✅ ensures custom declarations are picked up
+    "types/**/*.d.ts"
   ],
   "exclude": ["node_modules", ".next", "out"]
 }

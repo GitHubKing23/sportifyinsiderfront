@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { QRCodeCanvas } from "qrcode.react";
-
 import { fetchBlogById } from "@services/blogService";
+import { QRCodeCanvas } from "qrcode.react";
 
 // ✅ Dynamic imports for comments
 const CommentForm = dynamic(
@@ -21,6 +21,7 @@ const CommentList = dynamic(
 interface Blog {
   _id: string;
   title: string;
+  summary?: string;
   feature_image?: string;
   video_url?: string;
   tipAddress?: string;
@@ -62,72 +63,135 @@ const BlogDetail = () => {
   if (error) return <div>Error: {error}</div>;
   if (!blog) return <div>No blog found.</div>;
 
+  const previewContent =
+    blog.sections?.[0]?.content?.slice(0, 150) ||
+    "Read the latest update on SportifyInsider.";
+  const image = blog.feature_image || "https://sportifyinsider.com/default-preview.png";
+  const url = `https://sportifyinsider.com/blog/${blog._id}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blog.title,
+    description: blog.summary || previewContent,
+    image: image,
+    author: {
+      "@type": "Person",
+      name: "SportifyInsider AI"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "SportifyInsider",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://sportifyinsider.com/logo.png"
+      }
+    },
+    datePublished: new Date().toISOString(),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold">{blog.title}</h1>
+    <>
+      <Head>
+        <title>{blog.title} | SportifyInsider</title>
+        <meta name="description" content={blog.summary || previewContent} />
 
-      {blog.feature_image && (
-        <div className="relative w-full h-[400px] mt-4">
-          <Image
-            src={blog.feature_image}
-            alt={blog.title}
-            width={800}
-            height={400}
-            className="rounded-md object-cover"
-          />
-        </div>
-      )}
+        {/* Open Graph */}
+        <meta property="og:title" content={blog.title} />
+        <meta property="og:description" content={blog.summary || previewContent} />
+        <meta property="og:image" content={image} />
+        <meta property="og:url" content={url} />
+        <meta property="og:type" content="article" />
 
-      {blog.video_url && (
-        <div className="relative w-full pb-[56.25%] mt-4">
-          <iframe
-            src={blog.video_url.replace("watch?v=", "embed/")}
-            className="absolute top-0 left-0 w-full h-full rounded-md"
-            allowFullScreen
-            title="Blog Video"
-          />
-        </div>
-      )}
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={blog.title} />
+        <meta name="twitter:description" content={blog.summary || previewContent} />
+        <meta name="twitter:image" content={image} />
 
-      <article className="mt-6">
-        {blog.sections?.map((section, index) => (
-          <div key={index} className="mb-6">
-            <h2 className="text-2xl font-semibold">{section.heading}</h2>
-            <p>{section.content}</p>
+        {/* ✅ Structured Data for SEO */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Head>
+
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold">{blog.title}</h1>
+
+        {/* ✅ AI Summary Block */}
+        {blog.summary && (
+          <div className="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 rounded-md shadow">
+            <h2 className="text-lg font-bold mb-2">🧠 AI Summary</h2>
+            <p>{blog.summary}</p>
+            <p className="text-xs text-gray-500 mt-2 italic">⚡ Powered by SportifyInsider AI</p>
           </div>
-        ))}
-      </article>
+        )}
 
-      {/* ✅ Ethereum Tip Address Section with QR */}
-      {blog.tipAddress && (
-        <div className="mt-8 p-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-md text-white text-center">
-          <h3 className="text-2xl font-bold mb-2">💸 Tip the Author</h3>
-          <p className="text-sm text-gray-300 mb-4 break-words">{blog.tipAddress}</p>
-
-          <div className="flex justify-center mb-2">
-            <QRCodeCanvas
-              value={blog.tipAddress}
-              size={150}
-              fgColor="#ffffff"
-              bgColor="transparent"
-              imageSettings={{
-                src: "/eth-logo.png", // 👈 Make sure this image exists in /public
-                height: 32,
-                width: 32,
-                excavate: true,
-              }}
+        {blog.feature_image && (
+          <div className="relative w-full h-[400px] mt-4">
+            <Image
+              src={blog.feature_image}
+              alt={blog.title}
+              width={800}
+              height={400}
+              className="rounded-md object-cover"
             />
           </div>
-          <p className="text-xs text-gray-400">Scan with your wallet to tip ETH</p>
-        </div>
-      )}
+        )}
 
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">💬 Comments</h2>
-        <CommentForm postId={blog._id} onCommentAdded={() => setRefresh(!refresh)} />
-        <CommentList key={refresh.toString()} postId={blog._id} />
+        {blog.video_url && (
+          <div className="relative w-full pb-[56.25%] mt-4">
+            <iframe
+              src={blog.video_url.replace("watch?v=", "embed/")}
+              className="absolute top-0 left-0 w-full h-full rounded-md"
+              allowFullScreen
+              title="Blog Video"
+            />
+          </div>
+        )}
+
+        <article className="mt-6">
+          {blog.sections?.map((section, index) => (
+            <div key={index} className="mb-6">
+              <h2 className="text-2xl font-semibold">{section.heading}</h2>
+              <p>{section.content}</p>
+            </div>
+          ))}
+        </article>
+
+        {blog.tipAddress && (
+          <div className="mt-8 p-6 bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-md text-white text-center">
+            <h3 className="text-2xl font-bold mb-2">💸 Tip the Author</h3>
+            <p className="text-sm text-gray-300 mb-4 break-words">{blog.tipAddress}</p>
+
+            <div className="flex justify-center mb-2">
+              <QRCodeCanvas
+                value={blog.tipAddress}
+                size={150}
+                fgColor="#ffffff"
+                bgColor="transparent"
+                imageSettings={{
+                  src: "/eth-logo.png",
+                  height: 32,
+                  width: 32,
+                  excavate: true,
+                }}
+              />
+            </div>
+            <p className="text-xs text-gray-400">Scan with your wallet to tip ETH</p>
+          </div>
+        )}
+
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold mb-4">💬 Comments</h2>
+          <CommentForm postId={blog._id} onCommentAdded={() => setRefresh(!refresh)} />
+          <CommentList key={refresh.toString()} postId={blog._id} />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

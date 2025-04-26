@@ -7,7 +7,6 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/router";
-
 import { useEthereumLogin } from "@components/Auth/useEthereumLogin";
 
 interface UserProfile {
@@ -61,30 +60,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const getUserApiBase = () => {
+    if (process.env.NODE_ENV === "development") {
+      return "/proxy/users";
+    }
+    return process.env.NEXT_PUBLIC_USER_API || "https://api.sportifyinsider.com/api/users";
+  };
+
   const refreshUserProfile = useCallback(async () => {
     if (!token || !address) return;
 
-    const userApiBase = process.env.NEXT_PUBLIC_USER_API || "http://localhost:5002";
+    const userApiBase = getUserApiBase();
+    const fetchUrl = `${userApiBase}/${address}`;
+
+    console.log("🔗 Refreshing User Profile:", fetchUrl);
+    console.log("🪪 Using Token:", token);
 
     try {
-      const res = await fetch(`${userApiBase}/api/users/${address}`, {
+      const res = await fetch(fetchUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.warn(`⚠️ Failed to fetch user profile. Status: ${res.status}`);
+        return;
+      }
 
       const profile = await res.json();
       setUser(profile);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("AuthContext error refreshing profile:", error.message);
-      } else if (typeof error === "object" && error !== null) {
-        console.error("AuthContext error refreshing profile:", JSON.stringify(error));
-      } else {
-        console.error("AuthContext error refreshing profile:", String(error));
-      }
+      console.error("❌ AuthContext error refreshing profile:", error);
     }
   }, [token, address]);
 
@@ -107,9 +114,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("access_token", token);
         localStorage.setItem("ethereum_address", address);
 
-        const userApiBase = process.env.NEXT_PUBLIC_USER_API || "http://localhost:5002";
+        const userApiBase = getUserApiBase();
 
-        await fetch(`${userApiBase}/api/users`, {
+        await fetch(userApiBase, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -121,11 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await refreshUserProfile();
 
         setTimeout(() => {
-          if (
-            user?.username === address &&
-            !user?.bio &&
-            !user?.avatarUrl
-          ) {
+          if (user?.username === address && !user?.bio && !user?.avatarUrl) {
             router.push("/profile");
           }
         }, 500);
@@ -133,13 +136,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setError("Login failed: No result returned");
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error("[AuthContext] MetaMask login failed:", err.message);
-        setError(err.message || "Login failed");
-      } else {
-        console.error("[AuthContext] MetaMask login failed:", err);
-        setError("Login failed");
-      }
+      console.error("[AuthContext] MetaMask login failed:", err);
+      setError("Login failed");
       throw err;
     }
   };
@@ -174,6 +172,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-// ✅ Fix for: Module declares 'AuthContext' locally but it is not exported
 export { AuthContext };

@@ -5,17 +5,18 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+// ✅ Using alias paths from tsconfig.json
 import GoogleAnalytics from "@modules/GoogleAnalytics";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@context/AuthContext";
+import { logPageView } from "@lib/tracking";
+import TipWidget from "@components/TipWidget";
+import Navbar from "@modules/navbar/components/Navbar";
 
-import { logPageView } from "../lib/tracking";
-
-// Initialize QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2, // Retry failed queries twice
-      staleTime: 5 * 60 * 1000, // Cache data for 5 minutes
+      retry: 2,
+      staleTime: 5 * 60 * 1000,
     },
   },
 });
@@ -37,11 +38,16 @@ export default function App({ Component, pageProps }: AppProps) {
     };
   }, [router.events]);
 
+  console.log("🛠️ Rendering Component:", Component?.name || typeof Component);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <GoogleAnalytics />
+        <Navbar />
         <Component {...pageProps} />
+        {/* ✅ Now testing TipWidget */}
+        <TipWidget />
       </AuthProvider>
     </QueryClientProvider>
   );

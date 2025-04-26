@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-// ✅ Updated import based on actual path
 import Navbar from "@modules/navbar/components/Navbar";
 import { fetchAllBlogs } from "@services/blogService";
 
@@ -40,7 +39,7 @@ const BlogList: React.FC = () => {
     <div className="bg-gray-100 min-h-screen">
       <Navbar />
 
-      <div className="container mx-auto p-6 pt-20">
+      <main className="container mx-auto p-6 pt-20">
         <h1 className="text-4xl font-bold mb-6 text-center">Latest Blog Posts</h1>
 
         {loading && <div className="text-center">Loading blogs...</div>}
@@ -53,17 +52,17 @@ const BlogList: React.FC = () => {
               className="p-4 border rounded-lg bg-white shadow-md hover:shadow-lg transition"
             >
               {blog.feature_image && (
-                <div className="relative w-full h-[250px]">
+                <div className="relative w-full h-[200px] mb-3">
                   <Image
                     src={blog.feature_image}
-                    alt={blog.title}
-                    width={300}
-                    height={200}
+                    alt={blog.title || "Blog image"}
+                    layout="fill"
+                    objectFit="cover"
                     className="rounded-md"
                   />
                 </div>
               )}
-              <h2 className="text-xl font-semibold">{blog.title}</h2>
+              <h2 className="text-xl font-semibold mb-2">{blog.title}</h2>
               <Link
                 href={`/blog/${blog._id}`}
                 className="text-blue-600 hover:underline cursor-pointer mt-2 block"
@@ -73,7 +72,7 @@ const BlogList: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

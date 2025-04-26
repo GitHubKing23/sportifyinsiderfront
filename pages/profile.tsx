@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
+
 import { useAuth } from "@/context/AuthContext";
 import api from "@/utils/api";
 
@@ -38,7 +39,9 @@ const Profile = () => {
     fetchProfile();
   }, [user, isAuthenticated]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -63,15 +66,19 @@ const Profile = () => {
         formData.avatarUrl = avatarRes.data.avatarUrl;
       }
 
-      await api.put("/api/users/update", {
-        username: formData.username,
-        bio: formData.bio,
-        avatarUrl: formData.avatarUrl,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await api.put(
+        "/api/users/update",
+        {
+          username: formData.username,
+          bio: formData.bio,
+          avatarUrl: formData.avatarUrl,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setMessage("✅ Profile updated successfully!");
       await refreshUserProfile();
@@ -84,7 +91,11 @@ const Profile = () => {
   };
 
   if (!isAuthenticated) {
-    return <p className="text-center mt-8 text-red-500">Please log in with MetaMask to access your profile.</p>;
+    return (
+      <p className="text-center mt-8 text-red-500">
+        Please log in with MetaMask to access your profile.
+      </p>
+    );
   }
 
   return (

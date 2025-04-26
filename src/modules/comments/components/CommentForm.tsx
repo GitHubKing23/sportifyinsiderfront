@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { createComment } from "@modules/comments/services/commentService";
+import { postComment } from "@modules/comments/services/commentService";  // ✅ Corrected import
 import { useAuth } from "@/context/AuthContext";
 
 interface Props {
@@ -49,13 +49,13 @@ const CommentForm = ({ postId, onCommentAdded }: Props) => {
     setLoading(true);
 
     try {
-      // ✅ Explicitly typed
       queryClient.setQueryData<Comment[]>(["comments", postId], (old: Comment[] | undefined) => {
         const oldComments = Array.isArray(old) ? old : [];
         return [optimisticComment, ...oldComments];
       });
 
-      await createComment(token, { postId, content });
+      // ✅ Correct function call
+      await postComment(postId, content, token);
 
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
 
@@ -73,7 +73,6 @@ const CommentForm = ({ postId, onCommentAdded }: Props) => {
 
       setError(errMsg);
 
-      // ✅ Explicitly typed
       queryClient.setQueryData<Comment[]>(["comments", postId], (old: Comment[] | undefined) => {
         const oldComments = Array.isArray(old) ? old : [];
         return oldComments.filter((c: Comment) => c._id !== optimisticComment._id);
