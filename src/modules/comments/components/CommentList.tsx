@@ -26,14 +26,16 @@ interface ProfileCache {
 
 const CommentList = ({ postId, refreshTrigger }: CommentListProps) => {
   const {
-    data: comments = [],
+    data,
     isLoading,
     error,
-  }: UseQueryResult<Comment[], Error> = useQuery({
+  }: UseQueryResult<{ comments: Comment[] }, Error> = useQuery({
     queryKey: ["comments", postId, refreshTrigger],
     queryFn: () => fetchComments(postId),
     retry: 2,
   });
+
+  const comments = data?.comments || [];
 
   const [profileCache, setProfileCache] = useState<ProfileCache>({});
 
@@ -73,7 +75,7 @@ const CommentList = ({ postId, refreshTrigger }: CommentListProps) => {
     };
 
     if (comments.length > 0) fetchProfiles();
-  }, [comments, profileCache]); // ✅ fixed missing dependency
+  }, [comments, profileCache]);  // Ensuring dependencies are correct
 
   console.log(`[CommentList] Rendering postId: ${postId}, Comments:`, comments);
 
