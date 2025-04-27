@@ -1,11 +1,10 @@
-// pages/_app.tsx
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// ✅ Using alias paths from tsconfig.json
+// ✅ Import modules and context
 import GoogleAnalytics from "@modules/GoogleAnalytics";
 import { AuthProvider } from "@context/AuthContext";
 import { logPageView } from "@lib/tracking";
@@ -46,7 +45,6 @@ export default function App({ Component, pageProps }: AppProps) {
         <GoogleAnalytics />
         <Navbar />
         <Component {...pageProps} />
-        {/* ✅ Now testing TipWidget */}
         <TipWidget />
       </AuthProvider>
     </QueryClientProvider>

@@ -2,14 +2,15 @@ const fs = require('fs');
 const path = require('path');
 
 const filesToProcess = [
-  'C:/Users/User/sportifyinsider-frontbeta/pages/profile.tsx',
-  'C:/Users/User/sportifyinsider-frontbeta/lib/tracking.ts',
-  'C:/Users/User/sportifyinsider-frontbeta/src/components/Auth/useEthereumLogin.ts',
+  'C:/Users/User/sportifyinsider-frontbeta/src/components/TipWidget.tsx',
+  'C:/Users/User/sportifyinsider-frontbeta/src/modules/navbar/components/Navbar.tsx',
+  'C:/Users/User/sportifyinsider-frontbeta/src/modules/GoogleAnalytics.tsx',
   'C:/Users/User/sportifyinsider-frontbeta/src/context/AuthContext.tsx',
+  'C:/Users/User/sportifyinsider-frontbeta/src/lib/tracking.ts',
+  'C:/Users/User/sportifyinsider-frontbeta/src/modules/blog/services/blogService.ts',
   'C:/Users/User/sportifyinsider-frontbeta/src/modules/comments/components/CommentForm.tsx',
   'C:/Users/User/sportifyinsider-frontbeta/src/modules/comments/components/CommentList.tsx',
-  'C:/Users/User/sportifyinsider-frontbeta/src/modules/user/components/UserProfile.tsx',
-  'C:/Users/User/sportifyinsider-frontbeta/src/services/userService.ts',
+  'C:/Users/User/sportifyinsider-frontbeta/src/components/Auth/useEthereumLogin.ts'
 ];
 
 const outputDir = path.resolve(__dirname, 'extracted_files');
@@ -20,16 +21,16 @@ if (!fs.existsSync(outputDir)) {
 }
 
 filesToProcess.forEach(filePath => {
-  const fileName = path.basename(filePath);
-  const outputFilePath = path.join(outputDir, `${fileName}.txt`);
+  const relativePath = path.relative('C:/Users/User/sportifyinsider-frontbeta', filePath).replace(/[\/\\]/g, '_');
+  const outputFilePath = path.join(outputDir, `${relativePath}.txt`);
 
   if (fs.existsSync(filePath)) {
     const content = fs.readFileSync(filePath, 'utf-8');
     fs.writeFileSync(outputFilePath, content, 'utf-8');
-    console.log(`✅ Extracted: ${fileName}`);
+    console.log(`✅ Extracted: ${filePath}`);
   } else {
     fs.writeFileSync(outputFilePath, `⚠️ FILE NOT FOUND: ${filePath}`, 'utf-8');
-    console.warn(`❌ NOT FOUND: ${fileName}`);
+    console.warn(`❌ NOT FOUND: ${filePath}`);
   }
 });
 

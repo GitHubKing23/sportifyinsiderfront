@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import CommentForm from "./components/CommentForm";
-import CommentList from "./components/CommentList";
+import CommentForm from "@modules/comments/components/CommentForm";
+import CommentList from "@modules/comments/components/CommentList";
 
 const CommentSection = ({ postId }: { postId: string }) => {
   const [refresh, setRefresh] = useState(false);
@@ -19,4 +19,3 @@ const CommentSection = ({ postId }: { postId: string }) => {
 };
 
 export default CommentSection;
-

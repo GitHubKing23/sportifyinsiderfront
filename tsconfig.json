@@ -13,23 +13,29 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "src",
+
+    /* ---------- path & aliasing ---------- */
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],                                    // ✅ Added root alias
-      "@services/*": ["modules/blog/services/*"],
-      "@components/*": ["components/*"],
-      "@modules/*": ["modules/*"],
-      "@context/*": ["context/*"],
-      "@utils/*": ["utils/*"],
-      "@lib/*": ["lib/*"]
+      "@/*": ["src/*"],
+      "@services/*": ["src/services/*", "src/modules/blog/services/*"],
+      "@components/*": ["src/components/*"],
+      "@modules/*": ["src/modules/*"],
+      "@context/*": ["src/context/*"],
+      "@utils/*": ["src/utils/*"],
+      "@lib/*": ["src/lib/*"],
+      "@types/*": ["src/types/*"]
     },
-    "typeRoots": ["types", "node_modules/@types"]
+
+    /* ---------- global typings ----------- */
+    "types": ["node", "next", "next/types/global"]
   },
+
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "types/**/*.d.ts"
+    "types/**/*.ts"
   ],
   "exclude": ["node_modules", ".next", "out"]
 }

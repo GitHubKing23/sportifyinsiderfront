@@ -1,40 +1,40 @@
-// C:\Users\User\sportifyinsider-frontbeta\src\utils\api.ts
-import axios, {
-  AxiosInstance,
-  InternalAxiosRequestConfig,
-  AxiosError,
-} from "axios";
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from "axios";
 
-// ✅ Debug: Confirm .env loading
+// Detect environment
+const isDev = process.env.NODE_ENV === "development";
+
+// ✅ Confirm ENV variables
 console.log("📄 ENV VARS:", {
+  NODE_ENV: process.env.NODE_ENV,
   NEXT_PUBLIC_AUTH_API: process.env.NEXT_PUBLIC_AUTH_API,
   NEXT_PUBLIC_COMMENT_API: process.env.NEXT_PUBLIC_COMMENT_API,
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
-  NEXT_PUBLIC_WITH_CREDENTIALS: process.env.NEXT_PUBLIC_WITH_CREDENTIALS,
 });
 
-// ✅ Typed request interceptor
+// Inject Bearer Token if available
 const injectToken = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("access_token");
-    if (token && config.headers) {
+    if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
   return config;
 };
 
-// ✅ Axios instance creator
+// Create Axios Instance
 const createApi = (baseURL: string): AxiosInstance => {
   console.log("🛰️ Creating Axios instance with baseURL:", baseURL);
+
   const instance = axios.create({
     baseURL,
     headers: {
       "Content-Type": "application/json",
     },
-    timeout: 20000,
-    withCredentials: process.env.NEXT_PUBLIC_WITH_CREDENTIALS === "true",
+    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || "10000"),
+    withCredentials: false,   // Use false for token-based APIs
   });
 
   instance.interceptors.request.use(injectToken, (error) => {
@@ -55,7 +55,7 @@ const createApi = (baseURL: string): AxiosInstance => {
           data: error?.response?.data,
         });
       } else {
-        console.error("❌ Unknown error during Axios response:", error);
+        console.error("❌ Unknown Axios error:", error);
       }
       return Promise.reject(error);
     }
@@ -64,19 +64,19 @@ const createApi = (baseURL: string): AxiosInstance => {
   return instance;
 };
 
-// ✅ Use static or env-based URLs
-const authBaseURL = process.env.NEXT_PUBLIC_AUTH_API || "http://localhost:5003";
+// Base URLs
+const authBaseURL = process.env.NEXT_PUBLIC_AUTH_API || (isDev ? "http://localhost:5003" : "https://api.sportifyinsider.com/auth");
 export const authApi = createApi(authBaseURL);
 
-const commentBaseURL = process.env.NEXT_PUBLIC_COMMENT_API || "http://localhost:5004/api";
+const commentBaseURL = process.env.NEXT_PUBLIC_COMMENT_API || (isDev ? "http://localhost:5004/api/comments" : "https://api.sportifyinsider.com/api/comments");
 export const commentApi = createApi(commentBaseURL);
 
-const defaultBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sportifyinsider.com/api";
+const defaultBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || (isDev ? "http://localhost:5000/api" : "https://api.sportifyinsider.com/api");
 const api = createApi(defaultBaseURL);
 
-// 🔍 Output summary
-console.log("📡 Auth API is using base URL:", authApi.defaults.baseURL);
-console.log("📡 Comment API is using base URL:", commentApi.defaults.baseURL);
-console.log("📡 Default API is using base URL:", api.defaults.baseURL);
+// Summary Logs
+console.log("📡 Auth API Base:", authApi.defaults.baseURL);
+console.log("📡 Comment API Base:", commentApi.defaults.baseURL);
+console.log("📡 Default API Base:", api.defaults.baseURL);
 
 export default api;

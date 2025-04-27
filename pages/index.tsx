@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import Navbar from "@modules/navbar/components/Navbar";
 import { fetchAllBlogs } from "@services/blogService";
+import LiveTicker from "@components/LiveTicker";  // ➕ Import the Live Ticker
 
 interface Blog {
   _id: string;
@@ -38,6 +39,9 @@ const BlogList: React.FC = () => {
   return (
     <div className="bg-gray-100 min-h-screen">
       <Navbar />
+
+      {/* 🚨 Live Sports Ticker */}
+      <LiveTicker />
 
       <main className="container mx-auto p-6 pt-20">
         <h1 className="text-4xl font-bold mb-6 text-center">Latest Blog Posts</h1>

@@ -21,7 +21,6 @@ const CommentList = dynamic(
 interface Blog {
   _id: string;
   title: string;
-  summary?: string;
   feature_image?: string;
   video_url?: string;
   tipAddress?: string;
@@ -72,11 +71,11 @@ const BlogDetail = () => {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: blog.title,
-    description: blog.summary || previewContent,
+    description: previewContent,
     image: image,
     author: {
-      "@type": "Person",
-      name: "SportifyInsider AI"
+      "@type": "Organization",
+      name: "SportifyInsider"
     },
     publisher: {
       "@type": "Organization",
@@ -97,11 +96,11 @@ const BlogDetail = () => {
     <>
       <Head>
         <title>{blog.title} | SportifyInsider</title>
-        <meta name="description" content={blog.summary || previewContent} />
+        <meta name="description" content={previewContent} />
 
         {/* Open Graph */}
         <meta property="og:title" content={blog.title} />
-        <meta property="og:description" content={blog.summary || previewContent} />
+        <meta property="og:description" content={previewContent} />
         <meta property="og:image" content={image} />
         <meta property="og:url" content={url} />
         <meta property="og:type" content="article" />
@@ -109,7 +108,7 @@ const BlogDetail = () => {
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={blog.title} />
-        <meta name="twitter:description" content={blog.summary || previewContent} />
+        <meta name="twitter:description" content={previewContent} />
         <meta name="twitter:image" content={image} />
 
         {/* ✅ Structured Data for SEO */}
@@ -120,15 +119,6 @@ const BlogDetail = () => {
 
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold">{blog.title}</h1>
-
-        {/* ✅ AI Summary Block */}
-        {blog.summary && (
-          <div className="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 rounded-md shadow">
-            <h2 className="text-lg font-bold mb-2">🧠 AI Summary</h2>
-            <p>{blog.summary}</p>
-            <p className="text-xs text-gray-500 mt-2 italic">⚡ Powered by SportifyInsider AI</p>
-          </div>
-        )}
 
         {blog.feature_image && (
           <div className="relative w-full h-[400px] mt-4">

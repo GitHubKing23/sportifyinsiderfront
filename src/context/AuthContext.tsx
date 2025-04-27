@@ -60,11 +60,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // ✅ Handle API Base URL Dynamically
   const getUserApiBase = () => {
     if (process.env.NODE_ENV === "development") {
       return "/proxy/users";
     }
-    return process.env.NEXT_PUBLIC_USER_API || "https://api.sportifyinsider.com/api/users";
+    return process.env.NEXT_PUBLIC_USER_API?.replace(/\/$/, '') || "https://api.sportifyinsider.com/api/users";
   };
 
   const refreshUserProfile = useCallback(async () => {
@@ -116,6 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const userApiBase = getUserApiBase();
 
+        // ✅ POST to /api/users (no address in URL)
         await fetch(userApiBase, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
